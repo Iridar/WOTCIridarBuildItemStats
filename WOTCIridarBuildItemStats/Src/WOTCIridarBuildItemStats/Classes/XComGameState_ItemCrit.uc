@@ -46,7 +46,63 @@ simulated function X2ItemTemplate GetMyTemplate()
 
 simulated function array<UISummary_TacaticalText> GetUISummary_TacticalText()
 {
-	return RealkItem.GetUISummary_TacticalText();
+	if (m_ItemTemplate.IsA('X2WeaponUpgradeTemplate'))
+	{
+		return GetUISummary_TacticalText_WeaponUpgrade();
+	}
+
+	return GetUISummary_TacticalText_Item();
+}
+
+simulated function array<UISummary_TacaticalText> GetUISummary_TacticalText_Item()
+{
+	local bool bIsIn3D;
+	local int FontSize;
+	local string TacticalText;
+	local EUIState ColorState;
+	local UISummary_TacaticalText Data; 
+	local array<UISummary_TacaticalText> Items;
+
+	ColorState = eUIState_Normal;
+	bIsIn3D = `SCREENSTACK.GetCurrentScreen().bIsIn3D;
+	FontSize = bIsIn3D ? class'UIUtilities_Text'.const.BODY_FONT_SIZE_3D : class'UIUtilities_Text'.const.BODY_FONT_SIZE_2D;
+
+	TacticalText = m_ItemTemplate.GetItemTacticalText();
+	if (TacticalText == "")
+	{
+		TacticalText = m_ItemTemplate.BriefSummary;
+	}
+	
+	Data.Description = class'UIUtilities_Text'.static.GetColoredText(TacticalText, ColorState, FontSize);
+	Items.AddItem(Data);
+
+	return Items; 
+}
+
+simulated function array<UISummary_TacaticalText> GetUISummary_TacticalText_WeaponUpgrade()
+{
+	local bool bIsIn3D;
+	local int FontSize;
+	local string TacticalText;
+	local EUIState ColorState;
+	local UISummary_TacaticalText Data; 
+	local array<UISummary_TacaticalText> Items;
+
+	ColorState = eUIState_Normal;
+	bIsIn3D = `SCREENSTACK.GetCurrentScreen().bIsIn3D;
+	FontSize = bIsIn3D ? class'UIUtilities_Text'.const.BODY_FONT_SIZE_3D : class'UIUtilities_Text'.const.BODY_FONT_SIZE_2D;
+
+	TacticalText = X2WeaponUpgradeTemplate(m_ItemTemplate).TinySummary;
+	if( TacticalText == "" )
+	{
+		ColorState = eUIState_Bad;
+		TacticalText = "DEBUG: @Design: Missing TacticalText in '" $ GetMyTemplateName() $ "' template."; 
+	}
+
+	Data.Description = class'UIUtilities_Text'.static.GetColoredText(TacticalText, ColorState, FontSize);
+	Items.AddItem(Data);
+
+	return Items; 
 }
 
 simulated function array<UISummary_TacaticalText> GetUISummary_TacticalTextUpgrades()
@@ -56,7 +112,44 @@ simulated function array<UISummary_TacaticalText> GetUISummary_TacticalTextUpgra
 
 simulated function array<UISummary_TacaticalText> GetUISummary_TacticalTextAbilities()
 {
+	if (m_ItemTemplate.IsA('X2WeaponUpgradeTemplate'))
+	{
+		return GetUISummary_TacticalTextAbilities_WeaponUpgrade();
+	}
+
 	return RealkItem.GetUISummary_TacticalTextAbilities();
+}
+simulated function array<UISummary_TacaticalText> GetUISummary_TacticalTextAbilities_WeaponUpgrade()
+{
+	local bool bIsIn3D;
+	local X2WeaponUpgradeTemplate       UpgradeTemplate; 
+	local X2AbilityTemplateManager  AbilityTemplateManager;
+	local X2AbilityTemplate         AbilityTemplate; 
+	local name                      AbilityName;
+	local UISummary_Ability        UISummaryAbility; 
+	local UISummary_TacaticalText  Data; 
+	local array<UISummary_TacaticalText> Items; 
+
+	UpgradeTemplate = X2WeaponUpgradeTemplate(m_ItemTemplate);
+	if (UpgradeTemplate == none ) return Items;  //Empty.
+
+	bIsIn3D = `SCREENSTACK.GetCurrentScreen().bIsIn3D;
+	
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	foreach UpgradeTemplate.BonusAbilities(AbilityName)
+	{
+		AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
+		if( AbilityTemplate != none  && AbilityTemplate.bDisplayInUITacticalText )
+		{
+			UISummaryAbility = AbilityTemplate.GetUISummary_Ability();
+			Data.Name = class'UIUtilities_Text'.static.AddFontInfo(UISummaryAbility.Name, bIsIn3D, true, true);
+			Data.Description = class'UIUtilities_Text'.static.AddFontInfo(UISummaryAbility.Description, bIsIn3D, false);
+			Data.Icon = UISummaryAbility.Icon;
+			Items.AddItem(Data);
+		}
+	}
+
+	return Items; 
 }
 
 simulated function array<X2WeaponUpgradeTemplate> GetMyWeaponUpgradeTemplates()
@@ -79,19 +172,103 @@ simulated function array<UISummary_ItemStat> GetUISummary_DefaultStats()
 	local UIStatMarkup StatMarkup;
 	local array<UISummary_ItemStat> Stats; 
 	local UISummary_ItemStat Item; 
+	local UISummary_ItemStat EmptyItem; 
 	local int i;
 	local X2EquipmentTemplate EquipmentTemplate;
 	local delegate<X2StrategyGameRulesetDataStructures.SpecialRequirementsDelegate> ShouldStatDisplayFn;
 	local array<string> BonusLabels;
 	local UISummary_ItemStat		CategoryItem;
-
-	EquipmentTemplate = X2EquipmentTemplate(m_ItemTemplate);
+	local X2WeaponUpgradeTemplate	UpgradeTemplate;
+	local WeaponDamageValue         DamageValue;
 
 	CategoryItem.Label = `CAPS(class'UIPersonnel'.default.m_strButtonLabels[ePersonnelSoldierSortType_Class]); 
 	CategoryItem.Value = `CAPS(GetLocalizedCategory(m_ItemTemplate));
 	Stats.AddItem(CategoryItem);
 
-	if( EquipmentTemplate != None )
+	// ----------------------------------------------------------------------------------------
+	UpgradeTemplate = X2WeaponUpgradeTemplate(m_ItemTemplate);
+	if (UpgradeTemplate != none)
+	{	
+		// Aim
+		if (UpgradeTemplate.AimBonus != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.OffenseStat;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.AimBonus, UpgradeTemplate.AimBonus > 0 ? eUIState_Good : eUIState_Bad, "");
+			Stats.AddItem(Item);
+		}
+		// Crit
+		if (UpgradeTemplate.CritBonus != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.CritChanceLabel;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.CritBonus, UpgradeTemplate.CritBonus > 0 ? eUIState_Good : eUIState_Bad, "");
+			Stats.AddItem(Item);
+		}
+		// Clip Size
+		if (UpgradeTemplate.ClipSizeBonus != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.ClipSizeLabel;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.ClipSizeBonus, UpgradeTemplate.ClipSizeBonus > 0 ? eUIState_Good : eUIState_Bad, "");
+			Stats.AddItem(Item);
+		}
+		// Free Fire
+		if (UpgradeTemplate.FreeFireChance != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.FreeFireLabel;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.FreeFireChance, UpgradeTemplate.FreeFireChance > 0 ? eUIState_Good : eUIState_Bad, "%");
+			Stats.AddItem(Item);
+		}
+		// Free Reloads
+		if (UpgradeTemplate.NumFreeReloads != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.FreeReloadLabel;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.NumFreeReloads, UpgradeTemplate.NumFreeReloads > 0 ? eUIState_Good : eUIState_Bad, "");
+			Stats.AddItem(Item);
+		}
+		// Free Kill
+		if (UpgradeTemplate.FreeKillChance != 0)
+		{
+			Item.Label = class'XLocalizedData'.default.FreeKillLabel;
+			Item.Value = AddStatModifier(false, "", UpgradeTemplate.FreeKillChance, UpgradeTemplate.FreeKillChance > 0 ? eUIState_Good : eUIState_Bad, "%");
+			Stats.AddItem(Item);
+		}
+
+		// Miss Damage
+		Item = EmptyItem;
+		Item.Label = class'XLocalizedData'.default.MissDamageLabel;
+		DamageValue = UpgradeTemplate.BonusDamage;
+
+		if (DamageValue.Damage > 0)
+		{
+			if (DamageValue.Spread > 0 || DamageValue.PlusOne > 0)
+				Item.Value = string(DamageValue.Damage - DamageValue.Spread) $ "-" $ string(DamageValue.Damage + DamageValue.Spread + (DamageValue.PlusOne > 0) ? 1 : 0);
+			else
+				Item.Value = string(DamageValue.Damage);
+		}
+
+		if (Item.Value!="")
+			Stats.AddItem(Item);
+
+		// Bonus Damage
+		Item = EmptyItem;
+		Item.Label = class'XLocalizedData'.default.DamageBonusLabel;
+		DamageValue = UpgradeTemplate.CHBonusDamage;
+
+		if (DamageValue.Damage > 0)
+		{
+			if (DamageValue.Spread > 0 || DamageValue.PlusOne > 0)
+				Item.Value = string(DamageValue.Damage - DamageValue.Spread) $ "-" $ string(DamageValue.Damage + DamageValue.Spread + (DamageValue.PlusOne > 0) ? 1 : 0);
+			else
+				Item.Value = string(DamageValue.Damage);
+		}
+
+		if (Item.Value!="")
+			Stats.AddItem(Item);
+		
+		return Stats;
+	}
+
+	EquipmentTemplate = X2EquipmentTemplate(m_ItemTemplate);
+	if ( EquipmentTemplate != None )
 	{
 		// Search XComHQ for any breakthrough techs which modify the stats on this item, and store those stat changes
 		XComHQ = `XCOMHQ;
@@ -396,6 +573,14 @@ static private function string GetLocalizedCategory(const X2ItemTemplate UseItem
 	if (UseItemTemplate.IsA('X2ArmorTemplate'))
 	{
 		return class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor];
+	}
+	if (UseItemTemplate.IsA('X2WeaponUpgradeTemplate'))
+	{
+		return class'UIArmory_MainMenu'.default.m_strCustomizeWeapon;
+	}
+	if (UseItemTemplate.ItemCat == 'combatsim')
+	{
+		return class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_CombatSim];
 	}
 
 	WeaponTemplate = X2WeaponTemplate(UseItemTemplate);
