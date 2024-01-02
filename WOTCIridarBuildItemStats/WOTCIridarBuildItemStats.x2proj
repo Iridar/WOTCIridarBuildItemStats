@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>3d276726-410c-4ddd-b417-0091cf8f47c8</Guid>
+    <Name>WOTCIridarBuildItemStats</Name>
+    <Description>Displays the stats and the category of a weapon on the Build Items screen in the Engineering menu.</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>WOTCIridarBuildItemStats</AssemblyName>
+    <RootNamespace>WOTCIridarBuildItemStats</RootNamespace>
+    <ProjectGuid>{79fbaf4d-f2bd-4240-937a-5b12cb333712}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Config\Base\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Src\" />
+    <Folder Include="Content\" />
+    <Folder Include="ContentForCook\" />
+    <Folder Include="Src\WOTCIridarBuildItemStats\" />
+    <Folder Include="Src\WOTCIridarBuildItemStats\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\XComUI.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.CHN">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.CHT">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.DEU">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.ESN">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.FRA">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.ITA">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.JPN">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.KOR">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.POL">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCIridarBuildItemStats.RUS">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="ContentOptions.json" />
+    <Content Include="Config\Base\XComEditor.ini" />
+    <Content Include="Config\Base\XComEngine.ini" />
+    <Content Include="Config\Base\XComGame.ini" />
+    <Content Include="Config\XComTemplateCreator.ini" />
+    <Content Include="Config\XComTemplateEditor.ini" />
+    <Content Include="Localization\XComGame.int" />
+    <Content Include="Localization\WOTCIridarBuildItemStats.int" />
+    <Content Include="Src\extra_globals.uci" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\UISL_BuildItemStats.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\X2CritItemTemplate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\X2DLCInfo_WOTCIridarBuildItemStats.uc" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\Help.uc" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\ConfigEngine.uc" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\XComGameState_ItemCrit.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <PropertyGroup>
+    <SolutionRoot>$(MSBuildProjectDirectory)\..\</SolutionRoot>
+    <ScriptsDir>$(SolutionRoot).scripts\\</ScriptsDir>
+    <BuildCommonRoot>$(ScriptsDir)X2ModBuildCommon\</BuildCommonRoot>
+  </PropertyGroup>
+  <Import Project="$(BuildCommonRoot)XCOM2.targets" />
+</Project>
