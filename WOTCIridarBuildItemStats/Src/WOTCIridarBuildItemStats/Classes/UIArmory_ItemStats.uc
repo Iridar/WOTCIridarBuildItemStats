@@ -1,7 +1,8 @@
 class UIArmory_ItemStats extends UIPanel;
 
-// a copy of UIArmory_LoadoutItemTooltip that is not a tooltip, so it can be shown even when not directly hovering over an item.
-// actually very surprised that it just works.
+// A copy of UIArmory_LoadoutItemTooltip that extends UIPanel instead of UITooltip,
+// so its visibility is not dictated by mouse position.
+// Surprised it works.
 
 var int PADDING_LEFT;
 var int PADDING_RIGHT;

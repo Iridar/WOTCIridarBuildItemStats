@@ -14,8 +14,6 @@
     <Folder Include="Config\Base\" />
     <Folder Include="Localization\" />
     <Folder Include="Src\" />
-    <Folder Include="Content\" />
-    <Folder Include="ContentForCook\" />
     <Folder Include="Src\WOTCIridarBuildItemStats\" />
     <Folder Include="Src\WOTCIridarBuildItemStats\Classes\" />
   </ItemGroup>
@@ -55,13 +53,9 @@
     </Content>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
-    <Content Include="ContentOptions.json" />
     <Content Include="Config\Base\XComEditor.ini" />
     <Content Include="Config\Base\XComEngine.ini" />
     <Content Include="Config\Base\XComGame.ini" />
-    <Content Include="Config\XComTemplateCreator.ini" />
-    <Content Include="Config\XComTemplateEditor.ini" />
-    <Content Include="Localization\XComGame.int" />
     <Content Include="Localization\WOTCIridarBuildItemStats.int" />
     <Content Include="Src\extra_globals.uci" />
     <Content Include="Src\WOTCIridarBuildItemStats\Classes\UIArmory_ItemStats.uc">
@@ -73,9 +67,6 @@
     <Content Include="Src\WOTCIridarBuildItemStats\Classes\X2CritItemTemplate.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCIridarBuildItemStats\Classes\X2DLCInfo_WOTCIridarBuildItemStats.uc" />
-    <Content Include="Src\WOTCIridarBuildItemStats\Classes\Help.uc" />
-    <Content Include="Src\WOTCIridarBuildItemStats\Classes\ConfigEngine.uc" />
     <Content Include="Src\WOTCIridarBuildItemStats\Classes\XComGameState_ItemCrit.uc">
       <SubType>Content</SubType>
     </Content>

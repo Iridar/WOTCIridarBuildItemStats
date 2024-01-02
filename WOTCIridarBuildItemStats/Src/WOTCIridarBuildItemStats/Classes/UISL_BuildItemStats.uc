@@ -1,42 +1,62 @@
 class UISL_BuildItemStats extends UIScreenListener config(UI);
 
-var config private bool bDisplayStats;
+// This mod is suboptimal in a lot of places, so not a great example for learning.
 
-var config int ButtonX, ButtonY, ButtonH;
+var private config int ButtonX, ButtonY, ButtonH;
+var private config int StatsX, StatsY, StatsW, StatsH;
+var private config bool bDisplayStats;
 
-var config int StatsX, StatsY, StatsW, StatsH;
+var private string SelectedItemPath; // weak reference to the selected list item in the build items menu.
 
-var private string SelectedItemPath;
+struct ButtonDelegateStruct
+{
+	var name ButtonName;
+	var delegate<OnClickedDelegate> ButtonClickedDelegate;
+};
+var private array<ButtonDelegateStruct> ButtonDelegates;
 
-// TODO: Fix hiding the panel
-// TODO: Hide text when switching tabs
-// TODO: Add weapon category somewhere class'UIPersonnel'.default.m_strButtonLabels[ePersonnelSoldierSortType_Class]
-// TODO: add "enabled by default" config bool
+delegate OnClickedDelegate(UIButton Button);
 
 event OnInit(UIScreen Screen)
 {
-	local UIInventory_BuildItems			BuildItems;
-	local UIButton							Button;
+	local UIInventory_BuildItems	BuildItems;
+	local UIButton					Button;
 	local UIArmory_ItemStats		ItemStats;
+	local array<UIPanel>			TabButtons;
+	local UIPanel					TabButton;
+	local ButtonDelegateStruct		ButtonDelegate;
 
 	BuildItems = UIInventory_BuildItems(Screen);
 	if (BuildItems == none)
-	{
 		return;
-	}
 
 	if (BuildItems.List == none)
-	{
-		`AMLOG("No UIList, exiting");
 		return;
+
+	// When switching between tabs, we need to hide the vanilla information text, 
+	// so replace the tab button OnClicked delegates, storing the originals.
+	BuildItems.GetChildrenOfType(class'UIButton', TabButtons);
+	foreach TabButtons(TabButton)
+	{
+		Button = UIButton(TabButton);
+		if (Left(string(TabButton.MCName), Len("inventoryTab")) == "inventoryTab")
+		{
+			ButtonDelegate.ButtonName = Button.MCName;
+			ButtonDelegate.ButtonClickedDelegate = Button.OnClickedDelegate;
+			ButtonDelegates.AddItem(ButtonDelegate);
+
+			Button.OnClickedDelegate = OnTabButtonClicked;
+		}
 	}
 	
+	// Create "Info" button which will toggle the stats panel.
 	Button = BuildItems.Spawn(class'UIButton', BuildItems.ListContainer);
 	Button.InitButton('IRI_Engineering_ToggleStats_Button', Localize("UIControllerMap", "m_sInfo", "XComGame"), OnButtonClicked);
 	Button.SetX(ButtonX);
 	Button.SetY(ButtonY);
 	Button.SetHeight(ButtonH);
 
+	// Create the stats panel.
 	ItemStats = BuildItems.Spawn(class'UIArmory_ItemStats', BuildItems.ListContainer);
 	ItemStats.BasicWidth = StatsW;
 	ItemStats.Height = StatsH;
@@ -44,12 +64,45 @@ event OnInit(UIScreen Screen)
 	ItemStats.bUsePartialPath = true;
 	ItemStats.targetPath = string(BuildItems.MCPath); 
 	ItemStats.RequestItem = TooltipRequestItemFromPath; 
-	//ItemStats.ID = BuildItems.Movie.Pres.m_kTooltipMgr.AddPreformedTooltip(ItemStats);
-	//ItemStats.tDelay = 0; // instant tooltips!
 	ItemStats.SetPosition(StatsX, StatsY);
-	UpdateStatsVisibility(ItemStats);
 
 	BuildItems.List.OnSelectionChanged = SelectedItemChanged;
+	
+	// Run this immediately in case bDisplayStats was set to true in config 
+	// or persists from the previous visit to the engineering screen.
+	SelectedItemChanged(BuildItems.List, BuildItems.List.SelectedIndex);
+}
+
+event OnRemoved(UIScreen Screen)
+{
+	if (UIInventory_BuildItems(Screen) != none)
+	{
+		// Prevent a garbage collection crash by removing references to delegates when leaving the Engineering screen.
+		ButtonDelegates.Length = 0;
+	}
+}
+
+// When the user is switching tabs, hide the vanilla description, if stats panel is shown.
+private function OnTabButtonClicked(UIButton Button)
+{	
+	local ButtonDelegateStruct ButtonDelegate;
+	local delegate<OnClickedDelegate> ButtonClickedDelegate;
+
+	foreach ButtonDelegates(ButtonDelegate)
+	{
+		if (Button.MCName == ButtonDelegate.ButtonName)
+		{
+			// Can't run delegates directly from structs, apparently.
+			ButtonClickedDelegate = ButtonDelegate.ButtonClickedDelegate;
+			if (ButtonClickedDelegate != none)
+			{
+				ButtonClickedDelegate(Button);
+			}
+
+			UpdateVanillaDescription(Button);
+			break;
+		}
+	}
 }
 
 private function UpdateStatsVisibility(UIArmory_ItemStats ItemStats)
@@ -61,14 +114,12 @@ private function UpdateStatsVisibility(UIArmory_ItemStats ItemStats)
 	}
 	else
 	{
-		// I couldn't figure out how to toggle this panel's visibility, conventional methods refused to work,
-		// so as a hacky workaround, just move the panel off the screen when it's not needed.
-		//ItemStats.SetPosition(2000, 2000);
-		//ItemStats.HideTooltip();
 		ItemStats.Hide();
 	}
 }
 
+// Use some unholy hackery from MrNice. Highly likely that it's not actually necessary,
+// but I can't be foxed to unwrap this noodlery.
 private function XComGameState_Item TooltipRequestItemFromPath(string currentPath)
 {
 	local XComGameState_Item		ItemState;
@@ -123,48 +174,38 @@ private function SelectedItemChanged(UIList ContainerList, int ItemIndex)
 
 	BuildItems = UIInventory_BuildItems(ContainerList.GetParent(class'UIInventory_BuildItems'));
 	if (BuildItems == none)
-	{
-		`AMLOG("No Build Items screen, exiting");
 		return;
-	}
 
+	// Run the original method
 	BuildItems.SelectedItemChanged(ContainerList, ItemIndex);
 
-	`AMLOG("Selected item:" @ ItemIndex);
-
+	// Store a weak reference to the selected list item path so it can be accessed from TooltipRequestItemFromPath()
 	SelectedItemPath = PathName(ContainerList.GetSelectedItem());
 
 	ItemStats = UIArmory_ItemStats(BuildItems.GetChildByName('IRI_Engineering_ItemStats'));
 	if (ItemStats != none)
 	{
-		UpdateItemStatsPanel(ContainerList, ItemIndex);
+		UpdateVanillaDescription(BuildItems);
 		UpdateStatsVisibility(ItemStats);
 	}
 }
 
-private function UpdateItemStatsPanel(UIList ContainerList, int ItemIndex)
+private function UpdateVanillaDescription(const UIPanel ParentPanel)
 {
-	local UIInventory_ListItem				ListItem;
-	local UIInventory_BuildItems			BuildItems;
+	local UIInventory_BuildItems BuildItems;
 
 	if (!bDisplayStats)
 		return;
 
-	ListItem = UIInventory_ListItem(ContainerList.GetItem(ItemIndex));
-	if (ListItem == none)
-		return;
-	
-	if (ListItem.ItemTemplate == none)
-		return;
-
-	`AMLOG("Selected item:" @ ListItem.ItemTemplate.DataName);
-			
-	BuildItems = UIInventory_BuildItems(ListItem.GetParent(class'UIInventory_BuildItems'));
+	BuildItems = UIInventory_BuildItems(ParentPanel);
 	if (BuildItems == none)
-		return;
+	{
+		BuildItems = UIInventory_BuildItems(ParentPanel.GetParent(class'UIInventory_BuildItems'));
+		if (BuildItems == none)
+			return;
+	}
 		
 	BuildItems.ItemCard.PopulateData("", "", "", "");
-	//BuildItems.ItemCard.SetItemImages(ListItem.ItemTemplate, ListItem.ItemRef);
 
 	BuildItems.ItemCard.mc.BeginFunctionOp("PopulateCostData");
 	BuildItems.ItemCard.mc.QueueString("");
