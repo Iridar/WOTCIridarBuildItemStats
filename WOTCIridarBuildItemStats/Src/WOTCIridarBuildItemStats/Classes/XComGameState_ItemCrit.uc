@@ -392,6 +392,13 @@ static private function string GetLocalizedCategory(const X2ItemTemplate UseItem
 	local X2WeaponTemplate			WeaponTemplate;
 	local X2ItemTemplate			ItemTemplate;
 	local string					LocCat;
+	local X2ArmorTemplate			ArmorTemplate;
+
+	ArmorTemplate = X2ArmorTemplate(UseItemTemplate);
+	if (ArmorTemplate != none)
+	{
+		return class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor];
+	}
 
 	WeaponTemplate = X2WeaponTemplate(UseItemTemplate);
 	if (WeaponTemplate == none)

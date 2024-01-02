@@ -17,7 +17,7 @@ event OnInit(UIScreen Screen)
 {
 	local UIInventory_BuildItems			BuildItems;
 	local UIButton							Button;
-	local UIArmory_LoadoutItemTooltip		ItemStats;
+	local UIArmory_ItemStats		ItemStats;
 
 	BuildItems = UIInventory_BuildItems(Screen);
 	if (BuildItems == none)
@@ -37,27 +37,26 @@ event OnInit(UIScreen Screen)
 	Button.SetY(ButtonY);
 	Button.SetHeight(ButtonH);
 
-	ItemStats = BuildItems.Spawn(class'UIArmory_LoadoutItemTooltip', BuildItems.ListContainer);
+	ItemStats = BuildItems.Spawn(class'UIArmory_ItemStats', BuildItems.ListContainer);
 	ItemStats.BasicWidth = StatsW;
 	ItemStats.Height = StatsH;
 	ItemStats.InitLoadoutItemTooltip('IRI_Engineering_ItemStats');
 	ItemStats.bUsePartialPath = true;
 	ItemStats.targetPath = string(BuildItems.MCPath); 
 	ItemStats.RequestItem = TooltipRequestItemFromPath; 
-	ItemStats.ID = BuildItems.Movie.Pres.m_kTooltipMgr.AddPreformedTooltip(ItemStats);
-	ItemStats.tDelay = 0; // instant tooltips!
+	//ItemStats.ID = BuildItems.Movie.Pres.m_kTooltipMgr.AddPreformedTooltip(ItemStats);
+	//ItemStats.tDelay = 0; // instant tooltips!
 	ItemStats.SetPosition(StatsX, StatsY);
 	UpdateStatsVisibility(ItemStats);
 
 	BuildItems.List.OnSelectionChanged = SelectedItemChanged;
 }
 
-private function UpdateStatsVisibility(UIArmory_LoadoutItemTooltip ItemStats)
+private function UpdateStatsVisibility(UIArmory_ItemStats ItemStats)
 {
 	if (bDisplayStats)
 	{
-		
-		//ItemStats.ShowTooltip();
+		ItemStats.ShowTooltip();
 		ItemStats.Show();
 	}
 	else
@@ -120,7 +119,7 @@ private function OnButtonClicked(UIButton Button)
 private function SelectedItemChanged(UIList ContainerList, int ItemIndex)
 {
 	local UIInventory_BuildItems		BuildItems;
-	local UIArmory_LoadoutItemTooltip	ItemStats;
+	local UIArmory_ItemStats	ItemStats;
 
 	BuildItems = UIInventory_BuildItems(ContainerList.GetParent(class'UIInventory_BuildItems'));
 	if (BuildItems == none)
@@ -135,7 +134,7 @@ private function SelectedItemChanged(UIList ContainerList, int ItemIndex)
 
 	SelectedItemPath = PathName(ContainerList.GetSelectedItem());
 
-	ItemStats = UIArmory_LoadoutItemTooltip(BuildItems.GetChildByName('IRI_Engineering_ItemStats'));
+	ItemStats = UIArmory_ItemStats(BuildItems.GetChildByName('IRI_Engineering_ItemStats'));
 	if (ItemStats != none)
 	{
 		UpdateItemStatsPanel(ContainerList, ItemIndex);

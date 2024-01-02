@@ -64,6 +64,9 @@
     <Content Include="Localization\XComGame.int" />
     <Content Include="Localization\WOTCIridarBuildItemStats.int" />
     <Content Include="Src\extra_globals.uci" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\UIArmory_ItemStats.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarBuildItemStats\Classes\UISL_BuildItemStats.uc">
       <SubType>Content</SubType>
     </Content>
