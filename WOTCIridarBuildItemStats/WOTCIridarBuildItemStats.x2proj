@@ -58,6 +58,9 @@
     <Content Include="Config\Base\XComGame.ini" />
     <Content Include="Localization\WOTCIridarBuildItemStats.int" />
     <Content Include="Src\extra_globals.uci" />
+    <Content Include="Src\WOTCIridarBuildItemStats\Classes\DelayedInitActor.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarBuildItemStats\Classes\UIArmory_ItemStats.uc">
       <SubType>Content</SubType>
     </Content>

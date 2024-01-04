@@ -1,4 +1,4 @@
-`define AMLOG(msg) `LOG(GetFuncName() @ `msg, /* class'WOTCIridarBuildItemStats_Defaults'.default.VERSION_CFG > class'WOTCIridarBuildItemStats_MCMScreen'.default.VERSION_CFG ? class'WOTCIridarBuildItemStats_Defaults'.default.DEBUG_LOGGING : class'WOTCIridarBuildItemStats_MCMScreen'.default.DEBUG_LOGGING */, 'WOTCIridarBuildItemStats')
+`define AMLOG(msg) `LOG(GetFuncName() @ `msg, class'UISL_BuildItemStats'.default.bLog, 'WOTCIridarBuildItemStats')
 
 `define CAPS(VarName) class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`VarName)
 
